@@ -4,6 +4,8 @@ type IconName = string;
 
 const HERO_IMAGE = "https://cdn.poehali.dev/projects/d44eeebf-530b-4d7c-a8ce-0864c510d37c/files/b0efb88f-46f0-458f-9290-d0d12dbc8468.jpg";
 
+const MONTHS_RU = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+
 const NAV_ITEMS = ["Главная", "Новости", "События", "О нас"];
 
 const NEWS = [
@@ -13,7 +15,9 @@ const NEWS = [
     category: "Профсоюз",
     title: "Подписано соглашение об индексации заработной платы на 2026 год",
     excerpt: "Профсоюзный комитет успешно завершил переговоры с администрацией предприятия. Индексация составит 8,5% с 1 апреля 2026 года.",
+    body: "Профсоюзный комитет Башнефть-Сервис НПЗ завершил многоэтапные переговоры с администрацией предприятия по вопросу индексации заработной платы на 2026 год. Соглашение подписано 28 марта в присутствии представителей обеих сторон.\n\nСогласно достигнутым договорённостям, индексация составит 8,5% с 1 апреля 2026 года. Это выше уровня официальной инфляции и является значимой победой профсоюза в интересах работников.\n\nПредседатель профкома отметил, что переговоры велись в конструктивном ключе, и администрация предприятия проявила готовность к диалогу. Итоговые цифры отражают реальный рост стоимости жизни и позволяют сохранить покупательную способность сотрудников.",
     image: HERO_IMAGE,
+    gallery: [HERO_IMAGE, HERO_IMAGE, HERO_IMAGE],
   },
   {
     id: 2,
@@ -21,7 +25,9 @@ const NEWS = [
     category: "Охрана труда",
     title: "Проведён плановый инструктаж по пожарной безопасности",
     excerpt: "В марте прошли обязательные инструктажи для всех подразделений. Особое внимание уделено правилам эвакуации.",
+    body: "В течение марта 2026 года на предприятии проведены плановые инструктажи по пожарной безопасности для всех структурных подразделений. Мероприятия охватили более 800 сотрудников.\n\nОсобое внимание уделено практической отработке правил эвакуации, расположению первичных средств пожаротушения и алгоритму вызова пожарных служб. Все участники прошли тестирование и получили памятки.\n\nСледующий плановый инструктаж запланирован на сентябрь 2026 года.",
     image: HERO_IMAGE,
+    gallery: [HERO_IMAGE, HERO_IMAGE],
   },
   {
     id: 3,
@@ -29,7 +35,9 @@ const NEWS = [
     category: "Спорт",
     title: "Команда НПЗ заняла второе место в корпоративном волейбольном турнире",
     excerpt: "Спортсмены нашего предприятия достойно выступили на турнире «Башнефть-Спорт 2026» и вышли в финал.",
+    body: "12 марта завершился корпоративный волейбольный турнир «Башнефть-Спорт 2026», в котором приняли участие команды семи подразделений компании. Сборная НПЗ уверенно прошла групповой этап и вышла в финал.\n\nВ финальном матче наша команда встретилась с командой Управления буровых работ и уступила в пяти сетах. Второе место — достойный результат, отражающий высокий уровень подготовки наших спортсменов.\n\nПрофком благодарит всех участников и болельщиков, а также выражает признательность тренерскому составу за подготовку команды.",
     image: HERO_IMAGE,
+    gallery: [HERO_IMAGE, HERO_IMAGE, HERO_IMAGE, HERO_IMAGE],
   },
 ];
 
@@ -97,17 +105,50 @@ const ABOUT_SECTIONS = [
 ];
 
 type Section = "Главная" | "Новости" | "События" | "О нас";
+type NewsItem = typeof NEWS[number];
 
 export default function Index() {
   const [activeSection, setActiveSection] = useState<Section>("Главная");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeAbout, setActiveAbout] = useState(ABOUT_SECTIONS[0].id);
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [calendarDate, setCalendarDate] = useState({ year: 2026, month: 3 }); // month 0-indexed
 
   const navigate = (s: Section) => {
     setActiveSection(s);
     setMobileMenuOpen(false);
+    setSelectedNews(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const openNews = (news: NewsItem) => {
+    setSelectedNews(news);
+    setGalleryIndex(0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const closeNews = () => {
+    setSelectedNews(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const prevMonth = () => {
+    setCalendarDate((d) => {
+      if (d.month === 0) return { year: d.year - 1, month: 11 };
+      return { ...d, month: d.month - 1 };
+    });
+  };
+
+  const nextMonth = () => {
+    setCalendarDate((d) => {
+      if (d.month === 11) return { year: d.year + 1, month: 0 };
+      return { ...d, month: d.month + 1 };
+    });
+  };
+
+  const calDaysInMonth = new Date(calendarDate.year, calendarDate.month + 1, 0).getDate();
+  const calFirstDow = (new Date(calendarDate.year, calendarDate.month, 1).getDay() + 6) % 7; // 0=Mon
 
   const eventDays = EVENTS.map((e) => parseInt(e.date.day));
 
@@ -172,8 +213,101 @@ export default function Index() {
         </div>
       </header>
 
+      {/* ===== СТРАНИЦА НОВОСТИ ===== */}
+      {selectedNews && (
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 animate-fade-in">
+          <button
+            onClick={closeNews}
+            className="flex items-center gap-2 text-[var(--brand-steel)] text-sm font-medium mb-6 hover:gap-3 transition-all"
+          >
+            <Icon name="ArrowLeft" size={16} />
+            Назад к новостям
+          </button>
+
+          {/* Main image */}
+          <div className="relative rounded-xl overflow-hidden mb-6 shadow-lg h-64 md:h-96">
+            <img src={selectedNews.image} alt={selectedNews.title} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--brand-navy)]/60 to-transparent" />
+            <div className="absolute bottom-4 left-4">
+              <span className="bg-[var(--brand-gold)] text-[var(--brand-navy)] text-xs font-heading font-bold uppercase tracking-wide px-3 py-1.5 rounded">
+                {selectedNews.category}
+              </span>
+            </div>
+          </div>
+
+          {/* Meta + Title */}
+          <div className="flex items-center gap-2 mb-3">
+            <Icon name="Calendar" size={14} className="text-gray-400" />
+            <span className="text-gray-400 text-sm">{selectedNews.date}</span>
+          </div>
+          <h1 className="font-heading font-extrabold text-2xl md:text-3xl text-[var(--brand-navy)] leading-tight mb-6">
+            {selectedNews.title}
+          </h1>
+
+          {/* Body */}
+          <div className="prose max-w-none mb-10">
+            {selectedNews.body.split("\n\n").map((p, i) => (
+              <p key={i} className="text-gray-600 text-base leading-relaxed mb-4">{p}</p>
+            ))}
+          </div>
+
+          {/* Gallery */}
+          {selectedNews.gallery && selectedNews.gallery.length > 0 && (
+            <div>
+              <h2 className="font-heading font-bold text-lg text-[var(--brand-navy)] mb-4 flex items-center gap-2">
+                <Icon name="Images" size={18} className="text-[var(--brand-gold)]" />
+                Фотогалерея
+              </h2>
+
+              {/* Large selected photo */}
+              <div className="relative rounded-xl overflow-hidden mb-3 h-64 md:h-80 shadow-md">
+                <img
+                  src={selectedNews.gallery[galleryIndex]}
+                  alt={`Фото ${galleryIndex + 1}`}
+                  className="w-full h-full object-cover transition-all duration-300"
+                />
+                {selectedNews.gallery.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setGalleryIndex((i) => (i - 1 + selectedNews.gallery.length) % selectedNews.gallery.length)}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-all"
+                    >
+                      <Icon name="ChevronLeft" size={20} />
+                    </button>
+                    <button
+                      onClick={() => setGalleryIndex((i) => (i + 1) % selectedNews.gallery.length)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-all"
+                    >
+                      <Icon name="ChevronRight" size={20} />
+                    </button>
+                    <div className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                      {galleryIndex + 1} / {selectedNews.gallery.length}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Thumbnails */}
+              <div className="flex gap-2 flex-wrap">
+                {selectedNews.gallery.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setGalleryIndex(i)}
+                    className={`w-20 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                      i === galleryIndex ? "border-[var(--brand-gold)] shadow-md" : "border-transparent opacity-60 hover:opacity-90"
+                    }`}
+                  >
+                    <img src={img} alt={`Фото ${i + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </main>
+      )}
+
       {/* ===== ГЛАВНАЯ ===== */}
-      {activeSection === "Главная" && (
+      {!selectedNews && activeSection === "Главная" && (
         <main>
           {/* Hero */}
           <section className="relative h-[480px] md:h-[560px] overflow-hidden">
@@ -254,6 +388,7 @@ export default function Index() {
                 {NEWS.map((n) => (
                   <article
                     key={n.id}
+                    onClick={() => openNews(n)}
                     className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 flex gap-4 hover:shadow-md transition-shadow cursor-pointer"
                   >
                     <img src={n.image} alt={n.title} className="w-28 md:w-36 h-28 md:h-32 object-cover flex-shrink-0" />
@@ -277,8 +412,15 @@ export default function Index() {
               {/* Mini calendar */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                 <div className="bg-[var(--brand-navy)] text-white px-4 py-3 flex items-center justify-between">
-                  <span className="font-heading font-bold text-sm uppercase tracking-wide">Апрель 2026</span>
-                  <Icon name="CalendarDays" size={16} className="text-[var(--brand-gold)]" />
+                  <button onClick={prevMonth} className="w-7 h-7 flex items-center justify-center hover:bg-white/10 rounded transition-colors">
+                    <Icon name="ChevronLeft" size={16} className="text-[var(--brand-gold)]" />
+                  </button>
+                  <span className="font-heading font-bold text-sm uppercase tracking-wide">
+                    {MONTHS_RU[calendarDate.month]} {calendarDate.year}
+                  </span>
+                  <button onClick={nextMonth} className="w-7 h-7 flex items-center justify-center hover:bg-white/10 rounded transition-colors">
+                    <Icon name="ChevronRight" size={16} className="text-[var(--brand-gold)]" />
+                  </button>
                 </div>
                 <div className="p-4">
                   <div className="grid grid-cols-7 gap-1 mb-2">
@@ -287,10 +429,11 @@ export default function Index() {
                     ))}
                   </div>
                   <div className="grid grid-cols-7 gap-1">
-                    {Array.from({ length: 2 }).map((_, i) => <div key={`e${i}`} />)}
-                    {Array.from({ length: 30 }).map((_, i) => {
+                    {Array.from({ length: calFirstDow }).map((_, i) => <div key={`e${i}`} />)}
+                    {Array.from({ length: calDaysInMonth }).map((_, i) => {
                       const day = i + 1;
-                      const hasEvent = eventDays.includes(day);
+                      const isApril2026 = calendarDate.month === 3 && calendarDate.year === 2026;
+                      const hasEvent = isApril2026 && eventDays.includes(day);
                       return (
                         <div
                           key={day}
@@ -353,15 +496,16 @@ export default function Index() {
       )}
 
       {/* ===== НОВОСТИ ===== */}
-      {activeSection === "Новости" && (
+      {!selectedNews && activeSection === "Новости" && (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
           <div className="gold-line mb-8">
             <h1 className="section-title text-2xl md:text-3xl text-[var(--brand-navy)]">Новости профсоюза</h1>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...NEWS, ...NEWS].map((n, i) => (
+            {NEWS.map((n) => (
               <article
-                key={`${n.id}-${i}`}
+                key={n.id}
+                onClick={() => openNews(n)}
                 className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all hover:-translate-y-0.5 cursor-pointer"
               >
                 <div className="h-44 overflow-hidden">
@@ -376,9 +520,9 @@ export default function Index() {
                   </div>
                   <h2 className="font-heading font-bold text-base text-[var(--brand-navy)] leading-snug mb-2">{n.title}</h2>
                   <p className="text-gray-500 text-sm leading-relaxed line-clamp-3">{n.excerpt}</p>
-                  <button className="mt-4 text-[var(--brand-steel)] text-sm font-medium flex items-center gap-1 hover:gap-2 transition-all">
+                  <div className="mt-4 text-[var(--brand-steel)] text-sm font-medium flex items-center gap-1">
                     Читать далее <Icon name="ArrowRight" size={13} />
-                  </button>
+                  </div>
                 </div>
               </article>
             ))}
@@ -387,7 +531,7 @@ export default function Index() {
       )}
 
       {/* ===== СОБЫТИЯ ===== */}
-      {activeSection === "События" && (
+      {!selectedNews && activeSection === "События" && (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
           <div className="gold-line mb-8">
             <h1 className="section-title text-2xl md:text-3xl text-[var(--brand-navy)]">События и мероприятия</h1>
@@ -447,8 +591,15 @@ export default function Index() {
             <div>
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden sticky top-24">
                 <div className="bg-[var(--brand-navy)] text-white px-4 py-3 flex items-center justify-between">
-                  <span className="font-heading font-bold text-sm uppercase tracking-wide">Апрель 2026</span>
-                  <Icon name="CalendarDays" size={16} className="text-[var(--brand-gold)]" />
+                  <button onClick={prevMonth} className="w-7 h-7 flex items-center justify-center hover:bg-white/10 rounded transition-colors">
+                    <Icon name="ChevronLeft" size={16} className="text-[var(--brand-gold)]" />
+                  </button>
+                  <span className="font-heading font-bold text-sm uppercase tracking-wide">
+                    {MONTHS_RU[calendarDate.month]} {calendarDate.year}
+                  </span>
+                  <button onClick={nextMonth} className="w-7 h-7 flex items-center justify-center hover:bg-white/10 rounded transition-colors">
+                    <Icon name="ChevronRight" size={16} className="text-[var(--brand-gold)]" />
+                  </button>
                 </div>
                 <div className="p-4">
                   <div className="grid grid-cols-7 gap-1 mb-2">
@@ -457,10 +608,11 @@ export default function Index() {
                     ))}
                   </div>
                   <div className="grid grid-cols-7 gap-1">
-                    {Array.from({ length: 2 }).map((_, i) => <div key={`e${i}`} />)}
-                    {Array.from({ length: 30 }).map((_, i) => {
+                    {Array.from({ length: calFirstDow }).map((_, i) => <div key={`e${i}`} />)}
+                    {Array.from({ length: calDaysInMonth }).map((_, i) => {
                       const day = i + 1;
-                      const hasEvent = eventDays.includes(day);
+                      const isApril2026 = calendarDate.month === 3 && calendarDate.year === 2026;
+                      const hasEvent = isApril2026 && eventDays.includes(day);
                       return (
                         <div
                           key={day}
@@ -496,7 +648,7 @@ export default function Index() {
       )}
 
       {/* ===== О НАС ===== */}
-      {activeSection === "О нас" && (
+      {!selectedNews && activeSection === "О нас" && (
         <main>
           <div className="bg-[var(--brand-navy)] text-white py-14 px-4">
             <div className="max-w-7xl mx-auto">
