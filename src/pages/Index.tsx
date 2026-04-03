@@ -1,12 +1,13 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import Programs from "./Programs";
 type IconName = string;
 
 const HERO_IMAGE = "https://cdn.poehali.dev/projects/d44eeebf-530b-4d7c-a8ce-0864c510d37c/files/b0efb88f-46f0-458f-9290-d0d12dbc8468.jpg";
 
 const MONTHS_RU = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
 
-const NAV_ITEMS = ["Главная", "Новости", "События", "О нас"];
+const NAV_ITEMS = ["Главная", "Новости", "События", "Программы", "О нас"];
 
 const NEWS = [
   {
@@ -104,7 +105,7 @@ const ABOUT_SECTIONS = [
   },
 ];
 
-type Section = "Главная" | "Новости" | "События" | "О нас";
+type Section = "Главная" | "Новости" | "События" | "Программы" | "О нас";
 type NewsItem = typeof NEWS[number];
 
 export default function Index() {
@@ -645,6 +646,11 @@ export default function Index() {
             </div>
           </div>
         </main>
+      )}
+
+      {/* ===== ПРОГРАММЫ ===== */}
+      {!selectedNews && activeSection === "Программы" && (
+        <Programs onBack={() => navigate("Главная")} />
       )}
 
       {/* ===== О НАС ===== */}
